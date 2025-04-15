@@ -1,20 +1,28 @@
 import express from "express";
-import dotenv from "dotenv";
 import mongoose from "mongoose";
-import authRoutes from "./routes/authRoutes";
+import dotenv from "dotenv";
+import { reqTime } from "./middleware/reqTime.js";
+import { protect } from "./middleware/authMiddleware.js";
+import authRoutes from "./routes/authRoutes.js";
+
 dotenv.config();
 
 const app = express();
+
 const port = process.env.PORT || 3000;
 
+app.use(express.json());
+app.use(reqTime);
+
 mongoose.connect(process.env.MONGO_URI)
-    .then(_=> console.log("MongoDB connected"))
-    .catch(err => console.log("MongoDB error", err))
+    .then(() => console.log("MongoDB connected"))
+    .catch(err => console.error("MongoDB error:", err));
 
 // Routes
-app.use(authRoutes);
+app.use("/api/auth", authRoutes);
 
-// Protected Route
+
+// Protected example route
 app.get("/api/profile", protect, (req, res) => {
     res.json({
         message: `Welcome ${req.user.username}`,
@@ -23,5 +31,5 @@ app.get("/api/profile", protect, (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server running on port ::: ${port}`)
+    console.log(`Server running on port ${port}`);
 });
